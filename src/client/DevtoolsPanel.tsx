@@ -52,6 +52,23 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
   const [methodFilter, setMethodFilter] = useState<string>('ALL');
   const [failedOnly, setFailedOnly] = useState(false);
   const [scope, setScope] = useState<'mine' | 'external' | 'all'>('all');
+  const [detailSearch, setDetailSearch] = useState('');
+  const detailSearchRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+        if (detailSearchRef.current) {
+          e.preventDefault();
+          detailSearchRef.current.focus();
+          detailSearchRef.current.select();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
   const [poppedOut, setPoppedOut] = useState(false);
 
   const apiBase = (props.apiBase || '').replace(/\/$/, '');
@@ -451,22 +468,63 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
                 )}
               </Section>
               <Section title="Request Headers">
-                <TreeBox><JsonTree data={current.requestHeaders} /></TreeBox>
+                <TreeBox><JsonTree data={current.requestHeaders} highlight={detailSearch} /></TreeBox>
               </Section>
               {current.requestBody && (
                 <Section title="Request Body">
-                  <TreeBox>{renderBody(current.requestBody)}</TreeBox>
+                  <TreeBox>{renderBody(current.requestBody, detailSearch)}</TreeBox>
                 </Section>
               )}
               <Section title="Response Headers">
-                <TreeBox><JsonTree data={current.responseHeaders} /></TreeBox>
+                <TreeBox><JsonTree data={current.responseHeaders} highlight={detailSearch} /></TreeBox>
               </Section>
               <Section title="Response Body">
-                <TreeBox>{renderBody(current.responseBody)}</TreeBox>
+                <TreeBox>{renderBody(current.responseBody, detailSearch)}</TreeBox>
               </Section>
             </>
           )}
         </div>
+      </div>
+
+      {current && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 8px',
+            background: '#252526',
+            borderTop: '1px solid #333',
+          }}
+        >
+          <span style={{ color: '#888', fontSize: 11 }}>🔍</span>
+          <input
+            ref={detailSearchRef}
+            placeholder="Search in response/headers... (Ctrl+F)"
+            value={detailSearch}
+            onChange={(e) => setDetailSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setDetailSearch('');
+            }}
+            style={{
+              flex: 1,
+              background: '#1e1e1e',
+              color: '#fff',
+              border: '1px solid #333',
+              borderRadius: 4,
+              padding: '4px 8px',
+              outline: 'none',
+              fontSize: 12,
+            }}
+          />
+          {detailSearch && (
+            <button onClick={() => setDetailSearch('')} style={btnStyle}>
+              ✕
+            </button>
+          )}
+        </div>
+      )}
+      <div style={{ display: 'none' }}>
       </div>
       </>}
 
@@ -602,18 +660,46 @@ function TreeBox({ children, initialHeight = 240 }: { children: React.ReactNode;
   );
 }
 
-function renderBody(body: string) {
+function renderBody(body: string, highlight?: string) {
   if (!body) return <span style={{ color: '#666' }}>(empty)</span>;
   try {
     const parsed = JSON.parse(body);
-    return <JsonTree data={parsed} />;
+    return <JsonTree data={parsed} highlight={highlight} />;
   } catch {
+    return <HighlightedText text={body} highlight={highlight} />;
+  }
+}
+
+function HighlightedText({ text, highlight }: { text: string; highlight?: string }) {
+  if (!highlight) {
     return (
       <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#ce9178' }}>
-        {body}
+        {text}
       </pre>
     );
   }
+  const q = highlight.toLowerCase();
+  const lower = text.toLowerCase();
+  const parts: React.ReactNode[] = [];
+  let i = 0;
+  let idx = lower.indexOf(q, i);
+  let key = 0;
+  while (idx !== -1) {
+    if (idx > i) parts.push(text.slice(i, idx));
+    parts.push(
+      <mark key={key++} style={{ background: '#fbbf24', color: '#000', padding: '0 2px' }}>
+        {text.slice(idx, idx + highlight.length)}
+      </mark>,
+    );
+    i = idx + highlight.length;
+    idx = lower.indexOf(q, i);
+  }
+  if (i < text.length) parts.push(text.slice(i));
+  return (
+    <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#ce9178' }}>
+      {parts}
+    </pre>
+  );
 }
 
 function methodColor(m: string) {

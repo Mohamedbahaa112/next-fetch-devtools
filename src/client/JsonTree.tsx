@@ -7,6 +7,7 @@ type Props = {
   name?: string;
   defaultExpanded?: boolean;
   depth?: number;
+  highlight?: string;
 };
 
 const COLORS = {
@@ -25,6 +26,7 @@ export default function JsonTree({
   name,
   defaultExpanded = true,
   depth = 0,
+  highlight,
 }: Props) {
   return (
     <div
@@ -34,8 +36,38 @@ export default function JsonTree({
         lineHeight: '1.5',
       }}
     >
-      <Node value={data} name={name} depth={depth} defaultExpanded={defaultExpanded} />
+      <Node
+        value={data}
+        name={name}
+        depth={depth}
+        defaultExpanded={defaultExpanded}
+        highlight={highlight}
+      />
     </div>
+  );
+}
+
+function highlightText(text: string, query?: string) {
+  if (!query) return text;
+  const q = query.toLowerCase();
+  const t = String(text);
+  const idx = t.toLowerCase().indexOf(q);
+  if (idx === -1) return text;
+  return (
+    <>
+      {t.slice(0, idx)}
+      <mark
+        style={{
+          background: '#fbbf24',
+          color: '#000',
+          padding: '0 2px',
+          borderRadius: 2,
+        }}
+      >
+        {t.slice(idx, idx + query.length)}
+      </mark>
+      {t.slice(idx + query.length)}
+    </>
   );
 }
 
@@ -45,12 +77,14 @@ function Node({
   depth,
   defaultExpanded,
   lastInParent,
+  highlight,
 }: {
   value: any;
   name?: string | number;
   depth: number;
   defaultExpanded: boolean;
   lastInParent?: boolean;
+  highlight?: string;
 }) {
   const [open, setOpen] = useState(defaultExpanded && depth < 2);
 
@@ -58,11 +92,12 @@ function Node({
   const isObj = value !== null && typeof value === 'object' && !isArr;
   const isComposite = isArr || isObj;
 
+  const nameStr = name === undefined ? '' : typeof name === 'number' ? String(name) : `"${name}"`;
   const keyLabel =
     name !== undefined ? (
       <>
         <span style={{ color: COLORS.key }}>
-          {typeof name === 'number' ? name : `"${name}"`}
+          {highlightText(nameStr, highlight)}
         </span>
         <span style={{ color: COLORS.punct }}>: </span>
       </>
@@ -73,7 +108,7 @@ function Node({
       <div style={{ paddingLeft: depth * 14, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
         <span style={{ display: 'inline-block', width: 12 }} />
         {keyLabel}
-        {renderPrimitive(value)}
+        {renderPrimitive(value, highlight)}
         {!lastInParent && <span style={{ color: COLORS.punct }}>,</span>}
       </div>
     );
@@ -126,6 +161,7 @@ function Node({
               depth={depth + 1}
               defaultExpanded={defaultExpanded}
               lastInParent={i === entries.length - 1}
+              highlight={highlight}
             />
           ))}
           <div style={{ paddingLeft: 0 }}>
@@ -139,13 +175,17 @@ function Node({
   );
 }
 
-function renderPrimitive(v: any) {
+function renderPrimitive(v: any, highlight?: string) {
   if (v === null) return <span style={{ color: COLORS.null }}>null</span>;
   if (v === undefined) return <span style={{ color: COLORS.null }}>undefined</span>;
   if (typeof v === 'string')
-    return <span style={{ color: COLORS.string }}>&quot;{v}&quot;</span>;
+    return (
+      <span style={{ color: COLORS.string }}>
+        &quot;{highlightText(v, highlight)}&quot;
+      </span>
+    );
   if (typeof v === 'number')
-    return <span style={{ color: COLORS.number }}>{v}</span>;
+    return <span style={{ color: COLORS.number }}>{highlightText(String(v), highlight)}</span>;
   if (typeof v === 'boolean')
     return <span style={{ color: COLORS.boolean }}>{String(v)}</span>;
   return <span>{String(v)}</span>;
