@@ -31,7 +31,7 @@ function tryPretty(s: string) {
 }
 
 export default function DevtoolsStandalone(props: DevtoolsStandaloneProps = {}) {
-  const endpoint = props.endpoint ?? '/api/__devtools/fetches';
+  const endpoint = props.endpoint ?? '/api/nfd-devtools/fetches';
   const [logs, setLogs] = useState<LoggedFetch[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState('');

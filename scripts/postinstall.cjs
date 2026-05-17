@@ -41,7 +41,7 @@ function main() {
   // 1. Create supporting files
   const files = [
     {
-      path: path.join(appDir, 'api', '__devtools', 'fetches', 'route.ts'),
+      path: path.join(appDir, 'api', 'nfd-devtools', 'fetches', 'route.ts'),
       content: `import { createDevtoolsRoute } from 'next-fetch-devtools/server';
 
 const handlers = createDevtoolsRoute();
@@ -51,7 +51,7 @@ export const dynamic = 'force-dynamic';
 `,
     },
     {
-      path: path.join(appDir, '__devtools', 'page.tsx'),
+      path: path.join(appDir, 'nfd-devtools', 'page.tsx'),
       content: `import { notFound } from 'next/navigation';
 import { DevtoolsStandalone } from 'next-fetch-devtools/client';
 

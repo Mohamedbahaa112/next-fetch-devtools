@@ -28,7 +28,7 @@ const SIZE_KEY = 'nfd_devtools_size_v1';
 export type DevtoolsPanelProps = {
   /** Base URL of YOUR API — used by the "Mine" tab filter */
   apiBase?: string;
-  /** Endpoint that returns logged server requests. Default: /api/__devtools/fetches */
+  /** Endpoint that returns logged server requests. Default: /api/nfd-devtools/fetches */
   endpoint?: string;
   /** URL of the standalone full-page devtools. Default: /__devtools */
   standaloneUrl?: string;
@@ -43,8 +43,8 @@ function tryPretty(s: string) {
 }
 
 export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
-  const endpoint = props.endpoint ?? '/api/__devtools/fetches';
-  const standaloneUrl = props.standaloneUrl ?? '/__devtools';
+  const endpoint = props.endpoint ?? '/api/nfd-devtools/fetches';
+  const standaloneUrl = props.standaloneUrl ?? '/nfd-devtools';
   const [open, setOpen] = useState(false);
   const [logs, setLogs] = useState<LoggedFetch[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
