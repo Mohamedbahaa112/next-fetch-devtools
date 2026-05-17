@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import JsonTree from './JsonTree';
 
+declare const __NFD_VERSION__: string;
+const NFD_VERSION = typeof __NFD_VERSION__ !== 'undefined' ? __NFD_VERSION__ : '0.0.0';
+
 type LoggedFetch = {
   id: string;
   url: string;
@@ -283,7 +286,12 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
           userSelect: 'none',
         }}
       >
-        <strong style={{ color: '#4fc3f7' }}>🐞 ({logs.length})</strong>
+        <strong style={{ color: '#4fc3f7' }}>
+          🐞 ({logs.length}){' '}
+          <span style={{ color: '#666', fontWeight: 400, fontSize: 10 }}>
+            v{NFD_VERSION}
+          </span>
+        </strong>
         <input
           placeholder="filter url..."
           value={filter}
