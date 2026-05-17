@@ -21,6 +21,18 @@ export function clearLogs() {
 
 export function pushLog(entry: LoggedFetch) {
   const logs = g.__nfdLogs!;
+  // Deduplicate: same id OR same method+url within last 100ms
+  for (let i = 0; i < Math.min(logs.length, 10); i++) {
+    const l = logs[i];
+    if (l.id === entry.id) return;
+    if (
+      l.method === entry.method &&
+      l.url === entry.url &&
+      Math.abs(l.startedAt - entry.startedAt) < 100
+    ) {
+      return;
+    }
+  }
   logs.unshift(entry);
   if (logs.length > MAX_LOGS) logs.length = MAX_LOGS;
 }
