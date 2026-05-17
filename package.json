@@ -1,6 +1,6 @@
 {
   "name": "next-fetch-devtools",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "In-browser network devtools for Next.js apps that capture server-side and client-side fetch & axios requests.",
   "keywords": [
     "next",
@@ -37,6 +37,11 @@
       "types": "./dist/auto.d.ts",
       "import": "./dist/auto.js",
       "require": "./dist/auto.cjs"
+    },
+    "./auto-server": {
+      "types": "./dist/auto-server.d.ts",
+      "import": "./dist/auto-server.js",
+      "require": "./dist/auto-server.cjs"
     }
   },
   "files": [

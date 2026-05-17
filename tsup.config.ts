@@ -21,6 +21,7 @@ export default defineConfig([
       index: 'src/index.ts',
       'server/index': 'src/server/index.ts',
       auto: 'src/auto.ts',
+      'auto-server': 'src/auto-server.ts',
     },
     ...shared,
   },
