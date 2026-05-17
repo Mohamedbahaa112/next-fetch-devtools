@@ -1,6 +1,6 @@
 {
   "name": "next-fetch-devtools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "In-browser network devtools for Next.js apps that capture server-side and client-side fetch & axios requests.",
   "keywords": [
     "next",
@@ -36,16 +36,18 @@
   },
   "files": [
     "dist",
+    "scripts",
     "README.md"
   ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "postinstall": "node scripts/postinstall.js || true",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "react": ">=18",
-    "next": ">=13"
+    "next": ">=13",
+    "react": ">=18"
   },
   "peerDependenciesMeta": {
     "next": {
@@ -53,6 +55,7 @@
     }
   },
   "devDependencies": {
+    "@types/node": "^25.8.0",
     "@types/react": "^18.0.0",
     "react": "^18.0.0",
     "tsup": "^8.0.0",

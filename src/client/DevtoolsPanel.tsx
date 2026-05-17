@@ -40,7 +40,7 @@ function tryPretty(s: string) {
 }
 
 export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
-  const endpoint = props.endpoint ?? endpoint;
+  const endpoint = props.endpoint ?? '/api/__devtools/fetches';
   const standaloneUrl = props.standaloneUrl ?? '/__devtools';
   const [open, setOpen] = useState(false);
   const [logs, setLogs] = useState<LoggedFetch[]>([]);
