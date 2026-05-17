@@ -1,11 +1,19 @@
 #!/usr/bin/env node
 /* eslint-disable */
+try {
+  main();
+} catch (e) {
+  // Never fail the install if our auto-setup hits an error
+  console.log('[next-fetch-devtools] postinstall skipped:', e && e.message);
+  process.exit(0);
+}
+
+function main() {
 const fs = require('fs');
 const path = require('path');
 
-// Skip during the package's own install (CI/dev)
-if (process.env.INIT_CWD === undefined) process.exit(0);
-if (process.env.NEXT_FETCH_DEVTOOLS_SKIP_POSTINSTALL === '1') process.exit(0);
+if (process.env.INIT_CWD === undefined) return;
+if (process.env.NEXT_FETCH_DEVTOOLS_SKIP_POSTINSTALL === '1') return;
 
 const cyan = (s) => `\x1b[36m${s}\x1b[0m`;
 const green = (s) => `\x1b[32m${s}\x1b[0m`;
@@ -121,3 +129,4 @@ console.log(gray("  import { attachAxiosLogger } from 'next-fetch-devtools/serve
 console.log(gray("  export const client = attachAxiosLogger(axios.create({...}));"));
 console.log(cyan('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
 console.log('');
+}
