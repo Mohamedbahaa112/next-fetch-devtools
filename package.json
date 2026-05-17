@@ -1,6 +1,6 @@
 {
   "name": "next-fetch-devtools",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "description": "In-browser network devtools for Next.js apps that capture server-side and client-side fetch & axios requests.",
   "keywords": [
     "next",
