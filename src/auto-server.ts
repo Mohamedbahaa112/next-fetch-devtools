@@ -1,21 +1,18 @@
-// Server-only auto-setup: installs fetch logger and monkey-patches axios prototype.
+// Server-only auto-setup: installs fetch logger and monkey-patches axios.
 import { installFetchLogger, attachAxiosLogger } from './server/logger';
 
 installFetchLogger();
 
-function patchAxios() {
-  try {
-    let axios: any = null;
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      axios = require('axios');
-      if (axios && axios.default) axios = axios.default;
-    } catch {}
-    if (!axios || axios.__nfdPatched) return;
-    axios.__nfdPatched = true;
+function patchAxiosInstance(axios: any, label: string) {
+  if (!axios) {
+    console.log(`[nfd] axios ${label}: not found`);
+    return;
+  }
+  if (axios.__nfdPatched) return;
+  axios.__nfdPatched = true;
 
-    // 1. Patch axios.create so new instances get logged
-    const originalCreate = axios.create.bind(axios);
+  const originalCreate = axios.create?.bind(axios);
+  if (originalCreate) {
     axios.create = function (...args: any[]) {
       const instance = originalCreate(...args);
       try {
@@ -24,31 +21,43 @@ function patchAxios() {
         return instance;
       }
     };
-
-    // 2. Attach to the default axios instance (catches axios.get(), etc.)
-    try {
-      attachAxiosLogger(axios);
-    } catch {}
-
-    // 3. Patch the Axios prototype so ALREADY-created instances are also logged.
-    // We use a request interceptor on the prototype, since all instances share the prototype's methods.
-    try {
-      const Axios = axios.Axios;
-      if (Axios && Axios.prototype && !Axios.prototype.__nfdPatched) {
-        Axios.prototype.__nfdPatched = true;
-        const origRequest = Axios.prototype.request;
-        Axios.prototype.request = function (configOrUrl: any, maybeConfig?: any) {
-          try {
-            // Only attach once per instance
-            if (!this.__nfdAttached) {
-              attachAxiosLogger(this);
-            }
-          } catch {}
-          return origRequest.call(this, configOrUrl, maybeConfig);
-        };
-      }
-    } catch {}
+  }
+  try {
+    attachAxiosLogger(axios);
   } catch {}
+
+  try {
+    const Axios = axios.Axios;
+    if (Axios?.prototype && !Axios.prototype.__nfdPatched) {
+      Axios.prototype.__nfdPatched = true;
+      const origRequest = Axios.prototype.request;
+      Axios.prototype.request = function (configOrUrl: any, maybeConfig?: any) {
+        try {
+          if (!this.__nfdAttached) attachAxiosLogger(this);
+        } catch {}
+        return origRequest.call(this, configOrUrl, maybeConfig);
+      };
+    }
+  } catch {}
+  console.log(`[nfd] axios ${label}: patched ✓`);
 }
 
-patchAxios();
+// Sync require (CJS-style)
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const cjsAxios = require('axios');
+  patchAxiosInstance(cjsAxios?.default || cjsAxios, 'cjs');
+} catch (e: any) {
+  console.log('[nfd] axios cjs require failed:', e?.message);
+}
+
+// Async ESM import (catches ESM-only resolution)
+(async () => {
+  try {
+    // @ts-ignore
+    const mod: any = await import('axios');
+    patchAxiosInstance(mod?.default || mod, 'esm');
+  } catch (e: any) {
+    console.log('[nfd] axios esm import failed:', e?.message);
+  }
+})();
