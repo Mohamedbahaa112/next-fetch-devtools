@@ -48,6 +48,7 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
   const [open, setOpen] = useState(false);
   const [logs, setLogs] = useState<LoggedFetch[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [checked, setChecked] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState('');
   const [methodFilter, setMethodFilter] = useState<string>('ALL');
   const [failedOnly, setFailedOnly] = useState(false);
@@ -197,7 +198,33 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
     if (Array.isArray(clientLogs)) clientLogs.length = 0;
     setLogs([]);
     setSelected(null);
+    setChecked(new Set());
   };
+
+  // Hide given ids locally (visual delete). Server logs aren't deleted but won't show.
+  const hideIds = (ids: Set<string>) => {
+    if (!ids.size) return;
+    setLogs((prev) => prev.filter((l) => !ids.has(l.id)));
+    if (selected && ids.has(selected)) setSelected(null);
+    setChecked(new Set());
+  };
+
+  const deleteSelected = () => {
+    hideIds(checked);
+  };
+
+  const keepSelectedOnly = () => {
+    if (!checked.size) return;
+    setLogs((prev) => prev.filter((l) => checked.has(l.id)));
+    if (selected && !checked.has(selected)) setSelected(null);
+    setChecked(new Set());
+  };
+
+  const selectAllFiltered = () => {
+    setChecked(new Set(filtered.map((l) => l.id)));
+  };
+
+  const clearSelection = () => setChecked(new Set());
 
   const popOut = () => {
     window.open(standaloneUrl, '_blank');
@@ -356,8 +383,19 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
           />
           Failed ({failedCount})
         </label>
+        {checked.size > 0 && (
+          <>
+            <span style={{ color: '#fbbf24', fontSize: 11 }}>{checked.size} selected</span>
+            <button onClick={deleteSelected} style={btnStyle} title="Delete selected">🗑 Del</button>
+            <button onClick={keepSelectedOnly} style={btnStyle} title="Keep selected only, remove the rest">★ Keep</button>
+            <button onClick={clearSelection} style={btnStyle} title="Deselect all">○</button>
+          </>
+        )}
+        {checked.size === 0 && filtered.length > 0 && (
+          <button onClick={selectAllFiltered} style={btnStyle} title="Select all visible">☐ All</button>
+        )}
         <button onClick={popOut} style={btnStyle} title="Open in new tab">⧉</button>
-        <button onClick={clear} style={btnStyle}>Clear</button>
+        <button onClick={clear} style={btnStyle} title="Clear everything">Clear</button>
         <button onClick={toggleMin} style={btnStyle} title={minimized ? 'Restore' : 'Minimize'}>
           {minimized ? '▢' : '–'}
         </button>
@@ -407,7 +445,7 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
                 padding: '4px 8px',
                 cursor: 'pointer',
                 borderBottom: '1px solid #2a2a2a',
-                background: selected === l.id ? '#094771' : 'transparent',
+                background: selected === l.id ? '#094771' : checked.has(l.id) ? '#1f3a5c' : 'transparent',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
@@ -415,6 +453,21 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
                 overflow: 'hidden',
               }}
             >
+              <input
+                type="checkbox"
+                checked={checked.has(l.id)}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setChecked((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(l.id)) next.delete(l.id);
+                    else next.add(l.id);
+                    return next;
+                  });
+                }}
+                onClick={(e) => e.stopPropagation()}
+                style={{ cursor: 'pointer', accentColor: '#1f6feb' }}
+              />
               <span style={{ color: methodColor(l.method), fontWeight: 700, minWidth: 42, fontSize: 11 }}>
                 {l.method}
               </span>
