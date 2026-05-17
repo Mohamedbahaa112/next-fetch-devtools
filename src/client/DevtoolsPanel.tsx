@@ -83,7 +83,7 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
         }
       } catch {}
       const clientLogs: LoggedFetch[] =
-        (globalThis as any).__devtoolsFetchLogs || [];
+        (globalThis as any).__nfdLogs || [];
       const merged = [...clientLogs, ...serverLogs].sort(
         (a, b) => b.startedAt - a.startedAt,
       );
@@ -173,7 +173,7 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
 
   const clear = async () => {
     await fetch(endpoint, { method: 'DELETE' });
-    const clientLogs = (globalThis as any).__devtoolsFetchLogs;
+    const clientLogs = (globalThis as any).__nfdLogs;
     if (Array.isArray(clientLogs)) clientLogs.length = 0;
     setLogs([]);
     setSelected(null);
