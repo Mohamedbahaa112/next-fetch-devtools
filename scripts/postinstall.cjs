@@ -112,18 +112,19 @@ installFetchLogger();
       if (src.includes('next-fetch-devtools')) {
         layoutAlready = true;
       } else {
-        // Find last import line and insert ours after it
+        // 1. Put auto-server import as the VERY FIRST line (so it patches axios before any user code)
+        src = "import 'next-fetch-devtools/auto-server';\n" + src;
+        // 2. Add Devtools client import after last existing import
         const importRegex = /^import .+ from .+;?$/gm;
         let lastMatch;
         let m;
         while ((m = importRegex.exec(src)) !== null) lastMatch = m;
-        const importLine =
-          "import { Devtools } from 'next-fetch-devtools/client';\nimport 'next-fetch-devtools/auto-server';";
+        const clientImport = "import { Devtools } from 'next-fetch-devtools/client';";
         if (lastMatch) {
           const insertAt = lastMatch.index + lastMatch[0].length;
-          src = src.slice(0, insertAt) + '\n' + importLine + src.slice(insertAt);
+          src = src.slice(0, insertAt) + '\n' + clientImport + src.slice(insertAt);
         } else {
-          src = importLine + '\n' + src;
+          src = clientImport + '\n' + src;
         }
 
         // Inject <Devtools /> before </body>

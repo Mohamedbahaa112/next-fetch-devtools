@@ -1,17 +1,27 @@
 // Server-only auto-setup: installs fetch logger and monkey-patches axios.create.
+// MUST be imported BEFORE anything else (top of root layout).
 import { installFetchLogger, attachAxiosLogger } from './server/logger';
 
 installFetchLogger();
 
-// Auto-patch axios.create so any instance the user creates gets logging.
-(async () => {
+// Synchronously patch axios so it's done before any user code calls axios.create()
+function patchAxios() {
   try {
-    // Use dynamic import so axios is optional
-    // @ts-ignore - axios is an optional peer dep
-    const mod: any = await import('axios').catch(() => null);
-    if (!mod) return;
-    const axios = mod.default || mod;
-    if (axios.__nfdPatched) return;
+    let axios: any = null;
+    try {
+      // CJS / bundler-friendly resolution
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      axios = require('axios');
+      if (axios && axios.default) axios = axios.default;
+    } catch {
+      try {
+        // ESM dynamic import fallback (loaded via top-level createRequire)
+        // @ts-ignore
+        const mod = require('axios');
+        axios = mod.default || mod;
+      } catch {}
+    }
+    if (!axios || axios.__nfdPatched) return;
     axios.__nfdPatched = true;
 
     const originalCreate = axios.create.bind(axios);
@@ -23,9 +33,10 @@ installFetchLogger();
         return instance;
       }
     };
-    // Also attach to the default axios instance
     try {
       attachAxiosLogger(axios);
     } catch {}
   } catch {}
-})();
+}
+
+patchAxios();

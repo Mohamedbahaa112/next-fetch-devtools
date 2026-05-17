@@ -51,7 +51,7 @@ export default function DevtoolsPanel(props: DevtoolsPanelProps = {}) {
   const [filter, setFilter] = useState('');
   const [methodFilter, setMethodFilter] = useState<string>('ALL');
   const [failedOnly, setFailedOnly] = useState(false);
-  const [scope, setScope] = useState<'mine' | 'external' | 'all'>('mine');
+  const [scope, setScope] = useState<'mine' | 'external' | 'all'>('all');
   const [poppedOut, setPoppedOut] = useState(false);
 
   const apiBase = (props.apiBase || '').replace(/\/$/, '');
