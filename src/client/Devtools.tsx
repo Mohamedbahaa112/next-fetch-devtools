@@ -16,5 +16,10 @@ export default function Devtools(props: DevtoolsProps) {
   useEffect(() => setMounted(true), []);
   if (!props.showInProduction && process.env.NODE_ENV === 'production') return null;
   if (!mounted) return null;
-  return <DevtoolsPanel {...props} />;
+  const apiBase =
+    props.apiBase ??
+    (typeof process !== 'undefined' && process.env
+      ? (process.env.NEXT_PUBLIC_API_BASE_URL as string)
+      : '');
+  return <DevtoolsPanel {...props} apiBase={apiBase} />;
 }
