@@ -93,7 +93,7 @@ function installClientFetchLogger() {
         else if (init.body instanceof URLSearchParams) requestBody = init.body.toString();
         else if (init.body instanceof FormData) {
           const obj: any = {};
-          init.body.forEach((v, k) => (obj[k] = v instanceof File ? `[File ${v.name}]` : v));
+          init.body.forEach((v: any, k: string) => (obj[k] = v instanceof File ? `[File ${v.name}]` : v));
           requestBody = JSON.stringify(obj);
         } else requestBody = '[binary]';
       }
